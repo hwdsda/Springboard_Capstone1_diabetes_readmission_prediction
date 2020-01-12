@@ -1,7 +1,7 @@
 ---
 title: "Milestone Report of Capstone Project 1"
 author: "Hongyun Wang"
-date: "1/08/2020"
+date: "1/12/2020"
 
 fontsize: 10pt
 
@@ -51,29 +51,34 @@ Check the percentage of missing values for each variable and observation. Three 
 Categorical variables have following types:  
 - `race`, `gender`, `age`. Those are basic demographic information.  
 - `admission_type_id`, `discharge_disposition_id`, `admission_source_id` are numerical but they are IDs and should be treated as categorical.  
-- `diag_1`, `diag_2`, `diag_3` have several hundred distinct values. Those could be dropped for analysis. Those diagnose information are partly captured in numerical variable number_diagnoses.  
+- `diag_1`, `diag_2`, `diag_3` have several hundred distinct values. Those diagnose information are partly captured in numerical variable number_diagnoses.  
 - `max_glu_serum`, `A1Cresult`. Special lab test results.  
 - 23 generic medications and a special one `diabetesMed`. `change` is a binary variable indicating whether there was a change in diabetic medications (either dosage or generic name).  
+- Categorization of diagnoses variables: The dataset contained upto three diagnoses for a given patient (primary, secondary and additional). However, each of these had 700–900 unique ICD codes and it is extremely difficult to include them in the model and interpret meaningfully. Therefore, these diagnosis codes were grouped into 9 disease groups based on the original publication using this dataset. These 9 groups are Circulatory, Respiratory, Digestive, Diabetes, Injury, Musculoskeletal, Genitourinary, Neoplasms, and Others.  
+- Create another variable `num_change` number of diabetic medication change. For each encounter, if there are either one Up or one Down in diabetic medications, then there is one diabetic medication change. If thre are diabetic medication's generic name change but no dosage change (Steady), there is another diabetic medication change.
 
-After checking the levels of each categorical variable, variables with only 1 level were droped. They are `citoglipton`, `glimepiride-pioglitazone`, `examide`. Other variables with >50 levels were dropped too. They are `diag_1`, `diag_2`, `diag_3`.
+After checking the levels of each categorical variable, variables with only 1 level were droped. They are `citoglipton`, `glimepiride-pioglitazone`, `examide`. After removing duplicated patient numbers, both encounter id and patient number are unique now. Remove patient number and keep encounter id for row identification for later exploratory data analysis. Encounter id won't be included in later data modeling analysis.
 
 ### Summary of cleaned dataset
 The cleaned data set has 71,050 encounters and 41 variables:  
+- 1 unique encounter id  
+- 1 response variable  
 - 8 numerical variables  
-- 30 categorical variables  
-- 1 encounter id variable  
-- 1 patient number variable  
-- 1 response variable
+- 34 categorical variables  
+
 
 # Initial findings from exploratory data analysis
 ## summary of findings
-In primary study (no categorical level combination), 7 categorical variables have significant association with Readmission (*p*-value < 0.01). They are `repaglinide`, `age`, `diabetesMed`, `change`, `insulin`, `discharge_disposition_id` and` glipizide`. Except `age` and `discharge_disposition_id`, other 5 variables are all medication related, including medication types and medication changes.
+In primary study (no categorical level combination), 12 categorical variables have significant association with Readmission (*p*-value < 0.01). They are `repaglinide`, `diabetesMed`, `age`, `insulin`, `discharge_disposition_id`, `diag_2`, `diag_1`, `diag_3`, `change`, `metformin`, ` glipizide`and `admission_type_id`. `age`, `discharge_disposition_id`, `admission_type_id` are demorgraphic and admission/discarge realted. diag_2`, `diag_1` and `diag_3` are diagnoses categories completed at encounters. Other 7 variables are all medication related, including medication types and medication changes.
 
-`A1cresult `is not signifcant at primary study. After combining >7 category to norm category for `A1Cresult`, the association test generate a p-value of 0.0499. When adding one more variable `change` and create 3-way table, the p-value of association bwteeen >8 `A1Cresult`/`change` of medications and readmission is 0.0999. But the p-value of association bwteeen normal `A1Cresult`/`change` of medications and readmission is 0.762.
+There are 20 diabetic medications that have different levels of results. `insulin`, `metformin`, `glipizide` and `glyburide` are the top four diabetic medications used in encounters.  
+
+`A1cresult `is not signifcant at primary study. The *p*-value is 0.0641 at 0.05 significance level. After combining >7 category and > 8 category to form a High category for `A1Cresult`, the association test generate a *p*-value of 0.033. 
 
 Except two variables `num_procedures` and `number_outpatient` have *p*-values as 0.6626 and 0.0234, other 6 variables have *p*-value close to 0. The differences of mean of those 6 numerical variables between two Readmission categories are significant. 
 
 For 8 numerical variables, there are 28 paris of correlation coefficients. Among those 28 pairs of correlation coefficients, 3 pairs of numerical variables have corrrelation coeffieients greater than 0.3. They are `num_medications` and `time_in_hospital` (*r*=0.47), `num_procedres` and `num_medications` (*r*=0.4), and `num_lab_precedures` and `time_in_hospital` (*r*=0.33).
+
 
 ## visuals and statistics to support findings
 
@@ -82,17 +87,21 @@ For 8 numerical variables, there are 28 paris of correlation coefficients. Among
 Scatterplot of variables `num_procedures`, `number_diagnoses`, `num_medications`,`num_lab_procedures`. Those four numerical variables are about how many procedures/diagnoses/medications have been given and they are in similar scales.
 
 ![Scatterplot of numerical variables](C:/Users/hw07/Desktop/figures/num_var_scatter2.png){width=600px}  
+
 Scatterplot of variables `number_outpatient`, `number_inpatient`, `number_emergency`, `num_lab_procedures`. Those three numerical variables are about different type of clinic/hospital visits in the year precdeing the encounter and they are in similar scales.
 <center>
 ![Boxplot of numerical variables by Readmission](C:/Users/hw07/Desktop/figures/num_var_boxplot.png){width=600px}  
 </center>
+![Stripplot of numerical variables (visits preceding enrounters)](C:/Users/hw07/Desktop/figures/num_var_boxplot1.png){width=600px}  
 Readmissions tend to be associated with low number_emergency and number_outpatient. Those readmissions have longer time in hospital then those without readmissions. Then it suggests that the longer time stay (between 1 day and 14 days) in hospital, the more chance to have readmission.  
 
-![A1c and glucose serum](C:/Users/hw07/Desktop/figures/A1c_glucose_serum_barplot.png){width=300px} 
-![medication change and diametes medication](C:/Users/hw07/Desktop/figures/change_diabetes_med_barplot.png){width=300px} 
-From two-way contingency table, readmission is overrepresented in group (High A1C result and No change of medication) when comparing encounter percentage of 7.29% to 3.11%. But this conclusion needs to be proved in a statistical test.
+![A1c barplot](C:/Users/hw07/Desktop/figures/A1c_barplot.png){width=300px} 
+![glucose serum barplot](C:/Users/hw07/Desktop/figures/glucose_serum_barplot.png){width=300px} 
+![Frequency of diabetic mediction usage](C:/Users/hw07/Desktop/figures/diab_med_freq.png){width=600px} 
 
-![2-way table](C:/Users/hw07/Desktop/figures/tbl_a1c_change.PNG){width="40%"}
+
+![medication change and diabetes medication](C:/Users/hw07/Desktop/figures/change_diab_med.png){width=600px} 
+![medication change and diabetes medication](C:/Users/hw07/Desktop/figures/diab_med.png){width=600px} 
 
 
 
